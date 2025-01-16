@@ -14,7 +14,7 @@ func main() {
 	// Initialize the database connection
 	db.ConnectDB()
 
-	// Optional: Perform migrations (create or update database tables)
+	// Perform migrations
 	db.MigrateDB()
 
 	// Initialize the Fiber app
@@ -29,6 +29,6 @@ func main() {
 	// Start the server
 	log.Println("Server is running on port 3000")
 	if err := app.Listen(":3000"); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to start server: %v", err)
 	}
 }

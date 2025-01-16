@@ -1,31 +1,69 @@
 package db
 
 import (
-  "fmt"
-  "gorm.io/driver/postgres"
-  "gorm.io/gorm"
-  "log"
+	"fmt"
+	"log"
+	"os"
+	"task-management-api/internal/auth"
+	"task-management-api/internal/task"
+	"task-management-api/internal/user"
+
+	"github.com/joho/godotenv"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 var DB *gorm.DB
 
+// ConnectDB initializes the database connection
 func ConnectDB() {
-  dsn := "host=localhost port=5432 user=clinton password=blindspot dbname=tas_db sslmode=disable"
-  var err error
-  DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-  if err != nil {
-    log.Fatal("Error connecting to database:", err)
-  }
-  sqlDB, err := DB.DB
-  if err != nil {
-    log.Fatalf("Error getting db instance", err)
-  }
-  if err := sqlDB.Ping(); err != nil {
-    log.Fatalf("Error pinging db", err)
-  }
+	// Load .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
 
-  fmt.Println("Connected to database")
+	// Construct DSN from environment variables
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_NAME"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_SSL_MODE"),
+	)
 
+	// Open database connection
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatalf("Error connecting to database: %v", err)
+	}
+
+	// Get the underlying *sql.DB instance
+	sqlDB, err := DB.DB()
+	if err != nil {
+		log.Fatalf("Error getting DB instance: %v", err)
+	}
+
+	// Ping the database to confirm the connection
+	if err := sqlDB.Ping(); err != nil {
+		log.Fatalf("Error pinging database: %v", err)
+	}
+
+	fmt.Println("Connected to database")
 }
 
-fun migrateDB() {}
+// MigrateDB handles database migrations
+func MigrateDB() error {
+	err := DB.AutoMigrate(
+		&auth.User{},    // User model
+		&task.Task{},    // Task model
+		&user.Profile{}, // Any other models
+	)
+	if err != nil {
+		return fmt.Errorf("error migrating database: %w", err)
+	}
+	log.Println("Database migration completed")
+	return nil
+}
