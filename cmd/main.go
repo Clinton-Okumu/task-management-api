@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"task-management-api/internal/auth"
+	"task-management-api/internal/task"
 	"task-management-api/pkg/db"
 
 	"github.com/gofiber/fiber/v2"
@@ -12,8 +13,9 @@ func main() {
 	// Initialize the database connection
 	db.ConnectDB()
 
-	// Inject the database into auth
+	// Inject the database into packages
 	auth.Init(db.DB)
+	task.Init(db.DB)
 
 	// Perform migrations
 	if err := db.MigrateDB(); err != nil {
@@ -24,8 +26,8 @@ func main() {
 	app := fiber.New()
 
 	// Register routes
-	app.Post("/auth/login", auth.LoginHandler)       // POST login
-	app.Post("/auth/register", auth.RegisterHandler) // POST register
+	auth.RegisterRoutes(app)
+	task.RegisterRoutes(app)
 
 	// Start the server
 	log.Println("Server is running on port 3000")

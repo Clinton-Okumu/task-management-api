@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"task-management-api/internal/auth"
-	"task-management-api/internal/task"
+	"task-management-api/internal/models"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -17,8 +16,7 @@ var DB *gorm.DB
 // ConnectDB initializes the database connection
 func ConnectDB() {
 	// Load .env file
-	err := godotenv.Load()
-	if err != nil {
+	if err := godotenv.Load(); err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
 
@@ -34,6 +32,7 @@ func ConnectDB() {
 	)
 
 	// Open database connection
+	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Error connecting to database: %v", err)
@@ -55,9 +54,10 @@ func ConnectDB() {
 
 // MigrateDB handles database migrations
 func MigrateDB() error {
+	// Migrate the models
 	err := DB.AutoMigrate(
-		&auth.User{}, // User model
-		&task.Task{}, // Task
+		&models.User{}, // User model
+		&models.Task{}, // Task model
 	)
 	if err != nil {
 		return fmt.Errorf("error migrating database: %w", err)

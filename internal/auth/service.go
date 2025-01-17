@@ -2,25 +2,17 @@ package auth
 
 import (
 	"errors"
-
-	"gorm.io/gorm"
+	"task-management-api/internal/models"
 
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
-// DB is the database instance for the auth package
-var DB *gorm.DB
-
-// Init initializes the database instance for the auth package
-func Init(db *gorm.DB) {
-	DB = db
-}
-
 // RegisterUser registers a new user
-func RegisterUser(username, password, email string) error {
+func RegisterUser(db *gorm.DB, username, password, email string) error {
 	// Check if username or email exists
-	var existingUser User
-	result := DB.Where("username = ? OR email = ?", username, email).First(&existingUser)
+	var existingUser models.User
+	result := db.Where("username = ? OR email = ?", username, email).First(&existingUser)
 	if result.RowsAffected > 0 {
 		return errors.New("username or email already exists")
 	}
@@ -32,14 +24,14 @@ func RegisterUser(username, password, email string) error {
 	}
 
 	// Create a new user
-	user := User{
+	user := models.User{
 		Username: username,
 		Email:    email,
 		Password: string(hashedPassword),
 	}
 
 	// Save the user in the database
-	if err := DB.Create(&user).Error; err != nil {
+	if err := db.Create(&user).Error; err != nil {
 		return err
 	}
 
@@ -47,9 +39,9 @@ func RegisterUser(username, password, email string) error {
 }
 
 // LoginUser verifies user credentials
-func LoginUser(username, password string) error {
-	var user User
-	result := DB.Where("username = ?", username).First(&user)
+func LoginUser(db *gorm.DB, username, password string) error {
+	var user models.User
+	result := db.Where("username = ?", username).First(&user)
 	if result.RowsAffected == 0 {
 		return errors.New("username is incorrect")
 	}

@@ -21,6 +21,13 @@ func CreateTaskHandler(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid input"})
 	}
 
+	// Validate user ID presence
+	userID, ok := c.Locals("userID").(uint)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized or invalid user ID"})
+	}
+	task.UserID = userID
+
 	if err := CreateTask(db.DB, &task); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -30,7 +37,11 @@ func CreateTaskHandler(c *fiber.Ctx) error {
 
 // GetTasksHandler handles retrieving all tasks for a user
 func GetTasksHandler(c *fiber.Ctx) error {
-	userID := c.Locals("userID").(uint) // Assuming middleware sets this
+	userID, ok := c.Locals("userID").(uint)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized or invalid user ID"})
+	}
+
 	tasks, err := GetTasks(db.DB, userID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})

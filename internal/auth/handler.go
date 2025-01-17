@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"task-management-api/pkg/db"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -19,7 +21,7 @@ func RegisterHandler(c *fiber.Ctx) error {
 	}
 
 	// Call the service layer
-	if err := RegisterUser(req.Username, req.Email, req.Password); err != nil {
+	if err := RegisterUser(db.DB, req.Username, req.Password, req.Email); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -44,7 +46,7 @@ func LoginHandler(c *fiber.Ctx) error {
 	}
 
 	// Call the service layer
-	if err := LoginUser(req.Username, req.Password); err != nil {
+	if err := LoginUser(db.DB, req.Username, req.Password); err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": err.Error(),
 		})

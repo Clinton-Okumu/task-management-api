@@ -11,6 +11,10 @@ func CreateTask(db *gorm.DB, task *Task) error {
 	if task.Title == "" {
 		return errors.New("title is required")
 	}
+	if task.UserID == 0 {
+		return errors.New("user ID is required")
+	}
+
 	// Save task to the database
 	if err := db.Create(task).Error; err != nil {
 		return err
@@ -21,8 +25,6 @@ func CreateTask(db *gorm.DB, task *Task) error {
 // GetTasks retrieves all tasks for a specific user
 func GetTasks(db *gorm.DB, userID uint) ([]Task, error) {
 	var tasks []Task
-
-	// Query tasks associated with the given user
 	if err := db.Where("user_id = ?", userID).Find(&tasks).Error; err != nil {
 		return nil, err
 	}
@@ -41,7 +43,7 @@ func UpdateTask(db *gorm.DB, taskID uint, updates map[string]interface{}) error 
 		return err
 	}
 
-	// Update the task with the provided fields
+	// Apply updates
 	if err := db.Model(&task).Updates(updates).Error; err != nil {
 		return err
 	}
@@ -51,13 +53,11 @@ func UpdateTask(db *gorm.DB, taskID uint, updates map[string]interface{}) error 
 
 // DeleteTask deletes a task by ID
 func DeleteTask(db *gorm.DB, taskID uint) error {
-	// Delete the task by ID (soft delete by default)
 	if err := db.Delete(&Task{}, taskID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errors.New("task not found")
 		}
 		return err
 	}
-
 	return nil
 }
