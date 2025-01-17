@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"task-management-api/internal/auth"
+	"task-management-api/internal/task"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -56,6 +57,7 @@ func ConnectDB() {
 func MigrateDB() error {
 	err := DB.AutoMigrate(
 		&auth.User{}, // User model
+		&task.Task{}, // Task
 	)
 	if err != nil {
 		return fmt.Errorf("error migrating database: %w", err)
